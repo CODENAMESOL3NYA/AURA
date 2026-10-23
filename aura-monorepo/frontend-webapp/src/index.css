@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@theme {
+  --color-oled-black: #000000;
+  --color-oled-base: #050505;
+  --color-oled-surface: #0f0f11;
+  --color-oled-card: #18181b;
+  --color-oled-border: #27272a;
+}
