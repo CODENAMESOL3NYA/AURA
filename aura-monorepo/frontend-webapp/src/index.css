@@ -6,4 +6,122 @@
   --color-oled-surface: #0f0f11;
   --color-oled-card: #18181b;
   --color-oled-border: #27272a;
+  --color-oled-muted: #71717a;
+  --color-oled-subtle: #a1a1aa;
+  --color-oled-text: #fafafa;
+  --color-sos-red: #ef4444;
+  --color-sos-crimson: #dc2626;
+  --color-sos-rose: #f43f5e;
+  --color-stealth-bg: #f8fafc;
+  --color-stealth-surface: #ffffff;
+  --color-stealth-border: #e2e8f0;
+  --color-stealth-text: #0f172a;
+  --color-stealth-muted: #64748b;
+  --color-stealth-primary: #2563eb;
+}
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
+  letter-spacing: -0.018em;
+  color-scheme: dark;
+}
+
+/* Prevent iOS bounce & lock background (Task 1: 100dvh standard) */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  background-color: #050505;
+  color: #fafafa;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overscroll-behavior: none;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Smooth custom scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* Touch & tap feedback discipline */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, [role="button"], a {
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+/* Strict mobile touch targets (min 48px) for adrenaline-impaired hands */
+button,
+input[type="text"],
+input[type="tel"],
+input[type="password"],
+input[type="email"],
+input[type="submit"],
+input[type="button"],
+select {
+  min-height: 48px;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  min-height: auto;
+}
+
+/* Radar pulse animation for tactical live map */
+@keyframes radar-sweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-radar-sweep {
+  animation: radar-sweep 6s linear infinite;
+}
+
+/* Tactical map grid styling */
+.tactical-grid-dark {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.tactical-grid-streets {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
 }
