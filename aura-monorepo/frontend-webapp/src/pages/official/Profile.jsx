@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   User,
+  MapPin,
+  Phone,
+  EyeOff,
   Smartphone,
+  Settings,
   Mail,
   Info,
   LogOut,
@@ -12,10 +17,9 @@ import {
   Shield
 } from 'lucide-react';
 import { useAuthAndSafety } from '../../context/AuthAndSafetyContext';
-// Sprint 3: Re-enable these pages once they have default exports.
-// import HomeAddresses from './HomeAddresses';
-// import EmergencyContacts from './EmergencyContacts';
-// import SafetySettings from './SafetySettings';
+import HomeAddresses from './HomeAddresses';
+import EmergencyContacts from './EmergencyContacts';
+import SafetySettings from './SafetySettings';
 
 // Task 2: Standard iOS dimensions toggle
 function SleekToggle({ active, onToggle, label }) {
@@ -44,15 +48,20 @@ function SleekToggle({ active, onToggle, label }) {
 
 export default function Profile() {
   const navigate = useNavigate();
-  const {
+  const { 
     user,
     isUserLoading,
+    isStealthEnabled, 
+    toggleStealthEnabled, 
     setIsAuthenticated,
     setHasSeenOnboarding
   } = useAuthAndSafety();
 
   // Safety trigger state for hardware exit
   const [hardwareExitEnabled, setHardwareExitEnabled] = useState(true);
+
+  // Active sub-page state for Framer Motion slide-in transitions
+  const [activeSubPage, setActiveSubPage] = useState(null); // 'addresses' | 'contacts' | 'settings' | null
 
   // Active information modal state for secondary items
   const [activeInfoModal, setActiveInfoModal] = useState(null);
@@ -73,7 +82,7 @@ export default function Profile() {
             <User size={32} strokeWidth={2} />
           </div>
 
-          {/* Right: Dynamic Name & Crimson Verified Citizen badge */}
+          {/* Right: Dynamic Name & phone verification status */}
           <div className="flex-1 min-w-0">
             {user?.fullName ? (
               <h1 className="text-xl font-semibold tracking-tight text-white leading-snug truncate">
@@ -87,7 +96,7 @@ export default function Profile() {
               {user ? (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-xs font-medium text-rose-500">
                   <CheckCircle2 size={12} className="text-rose-500" strokeWidth={2.5} />
-                  {user.isVerified ? user.citizenStatus || 'Verified Citizen' : 'Pending Verification'}
+                  {user.citizenStatus || 'ID format check only'}
                 </span>
               ) : (
                 <div className="animate-pulse bg-zinc-800 h-4 w-24 rounded-full"></div>
@@ -125,8 +134,9 @@ export default function Profile() {
               <ChevronRight className="text-zinc-600 shrink-0 ml-2" size={18} strokeWidth={2} />
             </div>
 
-            {/* Sprint 3: Restore address management when its page is implemented.
+            {/* Home Addresses -> Task 5: Slide in Sub-page */}
             <div
+              onClick={() => setActiveSubPage('addresses')}
               className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/[0.02] transition-colors border-b border-white/5"
             >
               <div className="flex items-center space-x-3.5 min-w-0">
@@ -144,10 +154,10 @@ export default function Profile() {
               </div>
               <ChevronRight className="text-zinc-600 shrink-0 ml-2" size={18} strokeWidth={2} />
             </div>
-            */}
 
-            {/* Sprint 3: Restore emergency contacts when its page is implemented.
+            {/* Emergency Contacts -> Task 5: Slide in Sub-page */}
             <div
+              onClick={() => setActiveSubPage('contacts')}
               className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/[0.02] transition-colors"
             >
               <div className="flex items-center space-x-3.5 min-w-0">
@@ -165,7 +175,6 @@ export default function Profile() {
               </div>
               <ChevronRight className="text-zinc-600 shrink-0 ml-2" size={18} strokeWidth={2} />
             </div>
-            */}
           </div>
         </div>
 
@@ -175,7 +184,7 @@ export default function Profile() {
             Safety & Triggers
           </p>
           <div className="bg-[#111111] rounded-2xl border border-white/5 overflow-hidden">
-            {/* Sprint 1: Restore the disguise toggle after the stealth routes are implemented.
+            {/* Stealth Mode Disguise -> Task 1 Logic Fix: Updates isStealthEnabled to reveal/hide TopNav disguise button */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
               <div className="flex items-center space-x-3.5 min-w-0 pr-3">
                 <div className="w-9 h-9 rounded-xl bg-zinc-900 flex items-center justify-center text-zinc-300 shrink-0">
@@ -196,7 +205,6 @@ export default function Profile() {
                 label="Toggle Stealth Mode Disguise Quick Switch"
               />
             </div>
-            */}
 
             {/* Rapid Hardware Exit */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
@@ -220,8 +228,9 @@ export default function Profile() {
               />
             </div>
 
-            {/* Sprint 3: Restore settings when its page is implemented.
+            {/* Settings -> Task 5: Slide in Sub-page */}
             <div
+              onClick={() => setActiveSubPage('settings')}
               className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/[0.02] transition-colors"
             >
               <div className="flex items-center space-x-3.5 min-w-0">
@@ -239,7 +248,6 @@ export default function Profile() {
               </div>
               <ChevronRight className="text-zinc-600 shrink-0 ml-2" size={18} strokeWidth={2} />
             </div>
-            */}
           </div>
         </div>
 
@@ -339,7 +347,6 @@ export default function Profile() {
       </div>
 
       {/* Task 5: Sub-page Overlays via Framer Motion sliding in from right */}
-      {/* Sprint 3: Re-enable sub-page overlays when their pages are implemented.
       <AnimatePresence>
         {activeSubPage === 'addresses' && (
           <motion.div
@@ -380,7 +387,6 @@ export default function Profile() {
           </motion.div>
         )}
       </AnimatePresence>
-      */}
 
       {/* Information Modal */}
       {activeInfoModal && (
@@ -432,7 +438,7 @@ export default function Profile() {
                     <p className="text-xs text-zinc-500">ID Verification Status</p>
                     {user ? (
                       <p className="text-sm text-emerald-400 font-medium flex items-center gap-1.5">
-                        <Shield size={14} /> {user.isVerified ? 'SA National Identity Verified' : 'Pending Verification'}
+                        <Shield size={14} /> {user.isVerified ? 'Phone number verified' : 'Not verified'}
                       </p>
                     ) : (
                       <div className="animate-pulse bg-zinc-800 h-5 w-40 rounded"></div>

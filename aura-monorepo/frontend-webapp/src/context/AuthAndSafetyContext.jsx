@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { executeQuickExit } from '../utils/quickExit.js';
 
 const defaultContext = {
   user: null,
@@ -21,6 +22,10 @@ const defaultContext = {
   setActiveEmergency: () => {},
   triggerEmergency: () => {},
   clearEmergency: () => {},
+  // SOS State parity
+  sosActive: false,
+  triggerSos: () => {},
+  cancelSos: () => {},
   triggerQuickExit: () => {},
   initiateSensors: async () => false,
   contacts: [],
@@ -31,8 +36,9 @@ const defaultContext = {
 
 const AuthAndSafetyContext = createContext(defaultContext);
 
-const DOUBLE_TAP_DELAY_MS = 300;
-const SHAKE_THRESHOLD = 25; // Acceleration magnitude delta threshold
+const SHAKE_JOLT_DELTA = 30; // Hard acceleration delta required
+const SHAKE_WINDOW_MS = 800; // 3 jolts must occur within 800ms
+const SHAKE_COOLDOWN_MS = 3000; // 3-second lockout between shake triggers
 
 export function AuthAndSafetyProvider({ children }) {
   // Global dynamic user identity
@@ -45,17 +51,7 @@ export function AuthAndSafetyProvider({ children }) {
         // ignore
       }
     }
-    // Default verified citizen profile if authenticated
-    return {
-      id: 'usr_za_82910',
-      fullName: 'Kgothatso Mabitsela',
-      phoneNumber: '+27 82 123 4567',
-      idNumber: '9201015000081',
-      isVerified: true,
-      citizenStatus: 'Verified Citizen',
-      gender: 'Female',
-      dob: '1992-01-01',
-    };
+    return null;
   });
 
   const [isUserLoading, setIsUserLoading] = useState(false);
@@ -157,7 +153,7 @@ export function AuthAndSafetyProvider({ children }) {
         try {
           localStorage.setItem('hasSeenOnboarding', String(next));
         } catch {
-          // ignore in restricted environments
+          // ignore
         }
       }
       return next;
@@ -165,42 +161,47 @@ export function AuthAndSafetyProvider({ children }) {
   }, []);
 
   const [activeEmergency, setActiveEmergency] = useState(null);
+  const [sosActive, setSosActive] = useState(false);
 
-  const lastClickTimeRef = useRef(0);
+  // References for shake detection
   const lastAccelerationRef = useRef({ x: 0, y: 0, z: 0 });
   const isMotionAttachedRef = useRef(false);
+  const joltTimestampsRef = useRef([]);
+  const lastShakeTriggerRef = useRef(0);
 
-  // Emergency Quick Exit redirect function - synchronously forces browser location to Google
+  // Quick exit redirect invocation
   const triggerQuickExit = useCallback(() => {
-    try {
-      sessionStorage.clear();
-      localStorage.removeItem('aura_session');
-    } catch {
-      // Ignore storage errors in restrictive environments
-    }
-
-    // Force browser location immediately to Google to protect user safety
-    window.location.replace('https://www.google.com');
+    executeQuickExit();
   }, []);
 
-  // Emergency triggering helpers (Aura Rapid Response Branding)
+  // Emergency triggering helpers
   const triggerEmergency = useCallback((emergencyData = {}) => {
     const timestamp = new Date().toISOString();
     const payload = {
       id: `AURA-${Date.now().toString().slice(-6)}`,
       status: 'active',
       startedAt: timestamp,
-      dispatchedResponders: ['Aura Rapid Response Unit 4', 'Aura GBV Tactical Escort'],
-      gpsCoordinates: emergencyData.coordinates || { lat: -26.2798, lng: 28.0069 }, // Mondeor / Glenvista Central
+      dispatchedResponders: ['e-SAPS Tactical Rapid Response Unit 4', 'CPF Sector 2 Escort'],
+      gpsCoordinates: emergencyData.coordinates || null,
       sector: 'Johannesburg South - Mondeor Sector',
       ...emergencyData,
     };
     setActiveEmergency(payload);
+    setSosActive(true);
   }, []);
 
   const clearEmergency = useCallback(() => {
     setActiveEmergency(null);
+    setSosActive(false);
   }, []);
+
+  const triggerSos = useCallback(() => {
+    triggerEmergency();
+  }, [triggerEmergency]);
+
+  const cancelSos = useCallback(() => {
+    clearEmergency();
+  }, [clearEmergency]);
 
   const toggleStealthMode = useCallback(() => {
     setIsStealthMode((prev) => !prev);
@@ -216,7 +217,7 @@ export function AuthAndSafetyProvider({ children }) {
     });
   }, []);
 
-  // Motion handler for shake detection
+  // Hardened 3-Jolt Device Motion Shake Detection (Workstream R0)
   const handleDeviceMotion = useCallback((event) => {
     const currentAcc = event.accelerationIncludingGravity || event.acceleration;
     if (!currentAcc) return;
@@ -229,17 +230,31 @@ export function AuthAndSafetyProvider({ children }) {
     const deltaX = Math.abs(x - lastAcc.x);
     const deltaY = Math.abs(y - lastAcc.y);
     const deltaZ = Math.abs(z - lastAcc.z);
-
-    const speed = deltaX + deltaY + deltaZ;
-
-    if (speed > SHAKE_THRESHOLD) {
-      triggerQuickExit();
-    }
+    const totalDelta = deltaX + deltaY + deltaZ;
 
     lastAccelerationRef.current = { x, y, z };
-  }, [triggerQuickExit]);
 
-  // Internal helper to attach device motion listener
+    if (totalDelta > SHAKE_JOLT_DELTA) {
+      const now = Date.now();
+      // Enforce 3000ms cooldown after successful trigger
+      if (now - lastShakeTriggerRef.current < SHAKE_COOLDOWN_MS) {
+        return;
+      }
+
+      // Filter jolts occurring within the 800ms window
+      const recentJolts = joltTimestampsRef.current.filter((t) => now - t <= SHAKE_WINDOW_MS);
+      recentJolts.push(now);
+      joltTimestampsRef.current = recentJolts;
+
+      // 3 distinct hard jolts within 800ms required to fire
+      if (recentJolts.length >= 3) {
+        lastShakeTriggerRef.current = now;
+        joltTimestampsRef.current = [];
+        executeQuickExit();
+      }
+    }
+  }, []);
+
   const attachDeviceMotion = useCallback(() => {
     if (isMotionAttachedRef.current) return;
     if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
@@ -248,7 +263,6 @@ export function AuthAndSafetyProvider({ children }) {
     }
   }, [handleDeviceMotion]);
 
-  // Safari Shake Bug fix with DeviceMotionEvent.requestPermission
   const initiateSensors = useCallback(async () => {
     try {
       const devMotionEvent = window.DeviceMotionEvent;
@@ -283,40 +297,6 @@ export function AuthAndSafetyProvider({ children }) {
     };
   }, [attachDeviceMotion, handleDeviceMotion]);
 
-  // 1. Rapid double-tap on screen (consecutive clicks within 300ms)
-  useEffect(() => {
-    const handleScreenClick = () => {
-      const now = Date.now();
-      const timeSinceLastClick = now - lastClickTimeRef.current;
-
-      if (timeSinceLastClick > 0 && timeSinceLastClick <= DOUBLE_TAP_DELAY_MS) {
-        triggerQuickExit();
-      }
-
-      lastClickTimeRef.current = now;
-    };
-
-    window.addEventListener('click', handleScreenClick, true);
-
-    return () => {
-      window.removeEventListener('click', handleScreenClick, true);
-    };
-  }, [triggerQuickExit]);
-
-  // Global Escape key shortcut fallback
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        triggerQuickExit();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [triggerQuickExit]);
-
   const value = {
     user,
     setUser,
@@ -343,6 +323,9 @@ export function AuthAndSafetyProvider({ children }) {
     setActiveEmergency,
     triggerEmergency,
     clearEmergency,
+    sosActive,
+    triggerSos,
+    cancelSos,
     triggerQuickExit,
     initiateSensors,
   };

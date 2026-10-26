@@ -1,0 +1,2 @@
+import React,{useRef} from 'react';import {quickExit} from '../utils/quickExit.js';
+export default function QuickExitZone({children,className='',showAffordance=false}){const last=useRef(0);return <div onClick={e=>{const now=Date.now();if(now-last.current>0&&now-last.current<=300){e.stopPropagation();quickExit();}last.current=now;}} className={`relative select-none ${className}`} title="Double-tap this status area to leave the app">{children}{showAffordance&&<span className="sr-only">Double-tap this status area to leave the app</span>}</div>;}

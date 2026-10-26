@@ -1,27 +1,29 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext } from 'react';
+import { useAuthAndSafety } from './AuthAndSafetyContext.jsx';
 
+/**
+ * SafetyContext (Unified Proxy Layer)
+ *
+ * Forwards calls directly to AuthAndSafetyContext to ensure single-source-of-truth
+ * state for isStealthMode, activeEmergency, and sosActive across the entire application.
+ */
 const SafetyContext = createContext(undefined);
 
 export function SafetyProvider({ children }) {
-  const [isStealthMode, setStealthMode] = useState(false);
-  const [sosActive, setSosActive] = useState(false);
+  const authSafety = useAuthAndSafety();
 
-  const toggleStealthMode = () => setStealthMode(prev => !prev);
-  const triggerSos = () => setSosActive(true);
-  const cancelSos = () => setSosActive(false);
+  const value = {
+    isStealthMode: authSafety.isStealthMode,
+    setStealthMode: authSafety.setIsStealthMode,
+    toggleStealthMode: authSafety.toggleStealthMode,
+    sosActive: authSafety.sosActive,
+    triggerSos: authSafety.triggerSos,
+    cancelSos: authSafety.cancelSos,
+    contactsCount: authSafety.contacts?.length || 0,
+  };
 
   return (
-    <SafetyContext.Provider
-      value={{
-        isStealthMode,
-        setStealthMode,
-        toggleStealthMode,
-        sosActive,
-        triggerSos,
-        cancelSos,
-        contactsCount: 3,
-      }}
-    >
+    <SafetyContext.Provider value={value}>
       {children}
     </SafetyContext.Provider>
   );
@@ -30,7 +32,8 @@ export function SafetyProvider({ children }) {
 export function useSafety() {
   const context = useContext(SafetyContext);
   if (!context) {
-    throw new Error('useSafety must be used within a SafetyProvider');
+    // If used outside SafetyProvider, fallback directly to useAuthAndSafety
+    return useAuthAndSafety();
   }
   return context;
 }

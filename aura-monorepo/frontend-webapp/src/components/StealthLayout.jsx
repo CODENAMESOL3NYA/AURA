@@ -3,6 +3,8 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Calendar as CalendarIcon, CheckSquare, Settings, Lock, FileText, CheckCircle2 } from 'lucide-react';
 import { useSafety } from '../context/SafetyContext.jsx';
 import { useAuthAndSafety } from '../context/AuthAndSafetyContext.jsx';
+import QuickExitZone from './QuickExitZone.jsx';
+import GuardianAlertBanner from './GuardianAlertBanner.jsx';
 
 export default function StealthLayout() {
   const navigate = useNavigate();
@@ -24,8 +26,9 @@ export default function StealthLayout() {
 
   return (
     <div className="flex-1 flex flex-col bg-[#fcfcfd] text-slate-800 font-sans selection:bg-blue-100 selection:text-blue-900 pt-6 sm:pt-4">
-      {/* Stealth Calendar Header - Designed to look completely innocent like Notion / Apple Reminders */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+      {/* Stealth Calendar Header - Wrapped in QuickExitZone */}
+      <QuickExitZone className="sticky top-0 z-30">
+        <header className="bg-white border-b border-slate-200">
         <div className="flex justify-between items-center w-full px-4 pt-4 pb-2">
           <div className="flex items-center space-x-2.5">
             <button
@@ -82,12 +85,15 @@ export default function StealthLayout() {
           </div>
         </div>
       </header>
+      </QuickExitZone>
 
       {/* Calendar Disguise Body with Outlet */}
+      <GuardianAlertBanner stealth />
       <main className="flex-1 flex flex-col">
         <Outlet />
       </main>
 
+      {/* Completely benign disguise footer */}
       <footer className="border-t border-slate-100 bg-white py-2 px-4 text-center text-[10px] text-slate-400 flex items-center justify-between">
         <span>Workspace v3.4 &bull; Offline Auto-save</span>
         <span className="flex items-center space-x-1 text-slate-400">
