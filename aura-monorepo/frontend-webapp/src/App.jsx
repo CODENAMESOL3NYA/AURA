@@ -8,7 +8,6 @@ import StealthLayout from './components/StealthLayout.jsx';
 import SafetyDrawer from './components/SafetyDrawer.jsx';
 import HomeDashboard from './pages/official/HomeDashboard.jsx';
 import EmergencyGrid from './pages/official/EmergencyGrid.jsx';
-import ActiveTracker from './pages/official/ActiveTracker.jsx';
 import OfficialHome from './pages/official/OfficialHome.jsx';
 import Profile from './pages/official/Profile.jsx';
 import HomeAddresses from './pages/official/HomeAddresses.jsx';
@@ -187,14 +186,6 @@ function AppContentRoutes() {
             }
           />
           <Route
-            path="/active-tracker"
-            element={
-              <AnimatedPageWrapper>
-                <ActiveTracker />
-              </AnimatedPageWrapper>
-            }
-          />
-          <Route
             path="/report"
             element={
               <AnimatedPageWrapper>
@@ -307,21 +298,6 @@ function AppFrameContainer() {
     isBooting, 
     setIsBooting 
   } = useAuthAndSafety();
-
-  useEffect(() => {
-    const handleReplay = () => {
-      try {
-        localStorage.removeItem('hasSeenOnboarding');
-      } catch {
-        // ignore
-      }
-      if (typeof setHasSeenOnboarding === 'function') {
-        setHasSeenOnboarding(false);
-      }
-    };
-    window.addEventListener('aura:replay-onboarding', handleReplay);
-    return () => window.removeEventListener('aura:replay-onboarding', handleReplay);
-  }, [setHasSeenOnboarding]);
 
   const handleSplashComplete = () => {
     if (typeof setIsBooting === 'function') {

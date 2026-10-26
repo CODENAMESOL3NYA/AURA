@@ -92,7 +92,7 @@ export default function EmergencyGrid() {
       const threatLevel = /priority 1|critical/i.test(selectedIncident.badge || '') ? 'critical' : /priority 2|high/i.test(selectedIncident.badge || '') ? 'high' : 'medium';
       await startIncident({ category: selectedIncident.title, threatLevel, callbacks: { onStatus: setActiveEmergency } });
       setIsModalOpen(false);
-      navigate('/active-tracker');
+      navigate('/');
     } catch (error) {
       setIsModalOpen(false);
       window.alert(error?.name === 'LocationError' ? 'Your current location could not be obtained. No incident was created. Call 10111 if you need immediate help.' : (error?.message || 'Unable to create an incident.'));
