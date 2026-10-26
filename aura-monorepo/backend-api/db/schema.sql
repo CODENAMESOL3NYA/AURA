@@ -1,0 +1,1 @@
+-- Compatibility pointer; the canonical schema is in db/migrations/001_init.sql.

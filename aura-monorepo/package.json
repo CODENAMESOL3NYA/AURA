@@ -1,1 +1,33 @@
-{}
+{
+  "name": "daily-planner-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm --prefix frontend-webapp run dev",
+    "build": "npm --prefix frontend-webapp run build",
+    "cap:sync": "npm --prefix frontend-webapp run build && cap sync",
+    "cap:android": "cap add android && cap sync android",
+    "cap:ios": "cap add ios && cap sync ios",
+    "build:android": "npm --prefix frontend-webapp run build -- --mode android && cap sync android",
+    "android:open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/app": "^7.0.1",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/geolocation": "^7.1.5",
+    "@capacitor/haptics": "^7.0.1",
+    "@capacitor/motion": "^7.0.1",
+    "@capacitor/push-notifications": "7.0.2",
+    "@capacitor/splash-screen": "^7.0.1",
+    "@capacitor/status-bar": "^7.0.1",
+    "capacitor-secure-storage-plugin": "^0.12.0"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/ios": "^7.4.3",
+    "typescript": "^5.9.3"
+  }
+}
