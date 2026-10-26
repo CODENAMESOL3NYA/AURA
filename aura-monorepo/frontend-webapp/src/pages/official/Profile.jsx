@@ -20,6 +20,7 @@ import { useAuthAndSafety } from '../../context/AuthAndSafetyContext';
 import HomeAddresses from './HomeAddresses';
 import EmergencyContacts from './EmergencyContacts';
 import SafetySettings from './SafetySettings';
+import About from './About';
 
 // Task 2: Standard iOS dimensions toggle
 function SleekToggle({ active, onToggle, label }) {
@@ -33,13 +34,13 @@ function SleekToggle({ active, onToggle, label }) {
         e.stopPropagation();
         onToggle();
       }}
-      className={`relative flex items-center w-12 h-7 rounded-full p-1 cursor-pointer transition-colors duration-300 ease-in-out shrink-0 ${
+      className={`w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ease-in-out ${
         active ? 'bg-rose-500' : 'bg-zinc-700'
       }`}
     >
       <span
-        className={`bg-white w-5 h-5 rounded-full shadow-sm transform transition-transform duration-300 ease-in-out ${
-          active ? 'translate-x-5' : 'translate-x-0'
+        className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
+          active ? 'translate-x-7' : 'translate-x-0'
         }`}
       />
     </button>
@@ -54,14 +55,13 @@ export default function Profile() {
     isStealthEnabled, 
     toggleStealthEnabled, 
     setIsAuthenticated,
-    setHasSeenOnboarding
   } = useAuthAndSafety();
 
   // Safety trigger state for hardware exit
   const [hardwareExitEnabled, setHardwareExitEnabled] = useState(true);
 
   // Active sub-page state for Framer Motion slide-in transitions
-  const [activeSubPage, setActiveSubPage] = useState(null); // 'addresses' | 'contacts' | 'settings' | null
+  const [activeSubPage, setActiveSubPage] = useState(null); // 'addresses' | 'contacts' | 'settings' | 'about' | null
 
   // Active information modal state for secondary items
   const [activeInfoModal, setActiveInfoModal] = useState(null);
@@ -277,7 +277,7 @@ export default function Profile() {
 
             {/* About Aura */}
             <div
-              onClick={() => setActiveInfoModal('About Aura')}
+              onClick={() => setActiveSubPage('about')}
               className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/[0.02] transition-colors border-b border-white/5"
             >
               <div className="flex items-center space-x-3.5 min-w-0">
@@ -287,37 +287,6 @@ export default function Profile() {
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-white tracking-tight leading-snug">
                     About Aura
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="text-zinc-600 shrink-0 ml-2" size={18} strokeWidth={2} />
-            </div>
-
-            {/* System Briefing Tour */}
-            <div
-              onClick={() => {
-                try {
-                  localStorage.removeItem('hasSeenOnboarding');
-                } catch (e) {
-                  // ignore
-                }
-                if (typeof setHasSeenOnboarding === 'function') {
-                  setHasSeenOnboarding(false);
-                }
-                window.dispatchEvent(new CustomEvent('aura:replay-onboarding'));
-              }}
-              className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/[0.02] transition-colors border-b border-white/5"
-            >
-              <div className="flex items-center space-x-3.5 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-zinc-900 flex items-center justify-center text-rose-500 shrink-0">
-                  <Shield size={20} strokeWidth={2} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-white tracking-tight leading-snug">
-                    System Briefing Tour
-                  </p>
-                  <p className="text-xs text-zinc-400 tracking-tight truncate">
-                    Replay the 3-step tactical overview
                   </p>
                 </div>
               </div>
@@ -384,6 +353,19 @@ export default function Profile() {
             className="fixed inset-0 z-50 bg-black overflow-y-auto"
           >
             <SafetySettings onBack={() => setActiveSubPage(null)} />
+          </motion.div>
+        )}
+
+        {activeSubPage === 'about' && (
+          <motion.div
+            key="subpage-about"
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 28, stiffness: 240 }}
+            className="fixed inset-0 z-50 bg-black overflow-y-auto"
+          >
+            <About onBack={() => setActiveSubPage(null)} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -455,13 +437,6 @@ export default function Profile() {
                 </div>
               )}
 
-              {activeInfoModal === 'About Aura' && (
-                <div className="p-3.5 rounded-xl bg-zinc-900 border border-white/5 space-y-1.5 text-xs text-zinc-400">
-                  <p className="text-white font-medium text-sm">Aura Rapid Response v2.4.0</p>
-                  <p>Architected for the FNB Hackathon • South Africa</p>
-                  <p className="text-[11px] text-zinc-500 pt-1">OLED Dark Mode Engine with Dual-Layer Stealth Masking</p>
-                </div>
-              )}
             </div>
 
             <button

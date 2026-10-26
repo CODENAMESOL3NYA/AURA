@@ -46,13 +46,13 @@ function SleekToggle({ active, onToggle, label }) {
         e.stopPropagation();
         onToggle();
       }}
-      className={`relative flex items-center w-12 h-7 rounded-full p-1 cursor-pointer transition-colors duration-300 ease-in-out shrink-0 ${
+      className={`w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ease-in-out ${
         active ? 'bg-rose-500' : 'bg-zinc-700'
       }`}
     >
       <span
-        className={`bg-white w-5 h-5 rounded-full shadow-sm transform transition-transform duration-300 ease-in-out ${
-          active ? 'translate-x-5' : 'translate-x-0'
+        className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
+          active ? 'translate-x-7' : 'translate-x-0'
         }`}
       />
     </button>
