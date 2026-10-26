@@ -63,7 +63,7 @@ services:
     name: aura-citizen-web
     runtime: static
     buildCommand: npm ci --prefix frontend-webapp && npm --prefix frontend-webapp run build
-    staticPublishPath: ./frontend-webapp/dist
+    staticPublishPath: ./dist
     autoDeploy: true
     envVars:
       - key: VITE_API_URL
