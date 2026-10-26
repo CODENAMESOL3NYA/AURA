@@ -1,0 +1,141 @@
+
+name: security
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  static-and-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: aura
+          POSTGRES_PASSWORD: aura_test_password
+          POSTGRES_DB: aura
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aura -d aura"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+          --health-start-period 5s
+
+    env:
+      NODE_ENV: development
+      PORT: 5000
+      DATABASE_URL: postgres://aura:aura_test_password@127.0.0.1:5432/aura?sslmode=disable
+      JWT_SECRET: ci-test-secret-at-least-thirty-two-characters
+      ID_HASH_PEPPER: ci-id-hash-pepper-at-least-16
+      OTP_PEPPER: ci-otp-pepper-at-least-16
+      ALLOWED_ORIGINS: http://localhost:3000,capacitor://localhost,https://localhost
+      SMS_PROVIDER: console
+      RETENTION_DAYS_LOCATIONS: 90
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan for leaked secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: p/owasp-top-ten
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend-api/package-lock.json
+
+      - name: Generate test encryption key
+        shell: bash
+        run: echo "ID_ENC_KEY=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: Install backend dependencies
+        working-directory: backend-api
+        run: npm ci
+
+      - name: Audit production dependencies
+        working-directory: backend-api
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Verify database connection
+        working-directory: backend-api
+        run: |
+          node --input-type=module -e '
+            import pg from "pg";
+            const pool = new pg.Pool({
+              connectionString: process.env.DATABASE_URL
+            });
+            try {
+              await pool.query("SELECT 1");
+              console.log("PostgreSQL connection successful.");
+            } finally {
+              await pool.end();
+            }
+          '
+
+      - name: Run database migrations
+        working-directory: backend-api
+        run: npm run migrate
+
+      - name: Start API
+        working-directory: backend-api
+        run: |
+          nohup node server.js > /tmp/aura-api.log 2>&1 &
+          echo $! > /tmp/aura-api.pid
+
+      - name: Wait for API health check
+        shell: bash
+        run: |
+          for i in $(seq 1 30); do
+            if curl --silent --fail \
+              http://127.0.0.1:5000/api/v1/health \
+              -o /tmp/aura-health.json; then
+              echo "API health endpoint responded:"
+              cat /tmp/aura-health.json
+              echo
+              exit 0
+            fi
+
+            if ! kill -0 "$(cat /tmp/aura-api.pid)" 2>/dev/null; then
+              echo "API process exited unexpectedly."
+              cat /tmp/aura-api.log
+              exit 1
+            fi
+
+            sleep 2
+          done
+
+          echo "API did not become healthy in time."
+          cat /tmp/aura-api.log
+          exit 1
+
+      - name: Run backend tests
+        working-directory: backend-api
+        env:
+          API_URL: http://127.0.0.1:5000/api/v1
+          CI: "true"
+        run: |
+          test -n "$API_URL" || {
+            echo "ERROR: API_URL is required in CI."
+            exit 1
+          }
+          npm test
