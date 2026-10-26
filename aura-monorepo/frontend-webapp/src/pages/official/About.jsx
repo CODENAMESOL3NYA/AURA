@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Activity, ArrowLeft, EyeOff, Fingerprint, Shield } from 'lucide-react';
+import { Activity, ArrowLeft, EyeOff, Fingerprint } from 'lucide-react';
 
 const pillars = [
   {
@@ -61,8 +61,11 @@ export default function About({ onBack = null }) {
 
         <div className="flex flex-col flex-1">
           <header className="text-center pt-3">
-            <Shield className="text-rose-500 mx-auto mb-4" size={48} />
-            <h2 className="text-3xl font-bold text-white tracking-tighter">AURA</h2>
+            <img
+              src="/aura_logo.svg"
+              alt="Aura Logo"
+              className="w-32 h-32 mx-auto mb-4 object-contain"
+            />
             <p className="text-zinc-400 text-sm mt-1 tracking-tight leading-snug">
               Tactical Emergency Response &amp; GBV Protection Matrix
             </p>

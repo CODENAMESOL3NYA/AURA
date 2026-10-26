@@ -5,8 +5,7 @@ import {
   EyeOff, 
   Radio, 
   FileText, 
-  Grid, 
-  Navigation, 
+  Grid,
   User 
 } from 'lucide-react';
 import { useAuthAndSafety } from '../context/AuthAndSafetyContext.jsx';
@@ -36,26 +35,25 @@ export default function OfficialLayout() {
     };
   }, []);
 
-  // 5 Global Navigation Tabs with Profile as the 5th tab
+  // Four global navigation tabs.
   const navItems = [
     { name: 'Beacon', path: '/', icon: AlertTriangle },
     { name: 'Incidents', path: '/emergency-grid', icon: Grid },
-    { name: 'Tracker', path: '/active-tracker', icon: Navigation },
     { name: 'GBV Crisis', path: '/report', icon: FileText },
     { name: 'Profile', path: '/profile', icon: User },
   ];
 
   const isBeaconHome = location.pathname === '/' || location.pathname === '/beacon';
 
-  // Task 1: Top Navigation Eradication on /emergency-grid, /active-tracker, /report, and /profile
-  const hideHeaderRoutes = ['/emergency-grid', '/active-tracker', '/report', '/profile'];
+  // Hide the header on focused emergency and profile screens.
+  const hideHeaderRoutes = ['/emergency-grid', '/report', '/profile'];
   const shouldHideHeader = hideHeaderRoutes.some(
     (route) => location.pathname === route || location.pathname.startsWith(`${route}/`)
   );
 
   return (
     <div className="flex-1 flex flex-col bg-black text-white font-sans selection:bg-rose-500/30 selection:text-white relative">
-      {/* Sleek OLED Minimalist Header - Hidden on /emergency-grid, /active-tracker, /report, and /profile */}
+      {/* Sleek OLED Minimalist Header */}
       {!shouldHideHeader && (
         <QuickExitZone className="sticky top-0 z-30">
           <header className="border-b border-zinc-900 bg-black/95 backdrop-blur-xl">
@@ -144,9 +142,9 @@ export default function OfficialLayout() {
       <Outlet />
       </main>
 
-      {/* 5-Tab Uber-Style Bottom Navigation Tab Bar */}
+      {/* Four-tab bottom navigation */}
       <nav className="border-t border-zinc-900 bg-black/95 backdrop-blur-xl sticky bottom-0 z-30 px-2 py-1.5">
-        <div className="grid grid-cols-5 gap-1">
+        <div className="grid grid-cols-4 gap-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
