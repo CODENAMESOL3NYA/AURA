@@ -308,21 +308,6 @@ function AppFrameContainer() {
     setIsBooting 
   } = useAuthAndSafety();
 
-  useEffect(() => {
-    const handleReplay = () => {
-      try {
-        localStorage.removeItem('hasSeenOnboarding');
-      } catch {
-        // ignore
-      }
-      if (typeof setHasSeenOnboarding === 'function') {
-        setHasSeenOnboarding(false);
-      }
-    };
-    window.addEventListener('aura:replay-onboarding', handleReplay);
-    return () => window.removeEventListener('aura:replay-onboarding', handleReplay);
-  }, [setHasSeenOnboarding]);
-
   const handleSplashComplete = () => {
     if (typeof setIsBooting === 'function') {
       setIsBooting(false);
