@@ -8,7 +8,6 @@ import StealthLayout from './components/StealthLayout.jsx';
 import SafetyDrawer from './components/SafetyDrawer.jsx';
 import HomeDashboard from './pages/official/HomeDashboard.jsx';
 import EmergencyGrid from './pages/official/EmergencyGrid.jsx';
-import ActiveTracker from './pages/official/ActiveTracker.jsx';
 import OfficialHome from './pages/official/OfficialHome.jsx';
 import Profile from './pages/official/Profile.jsx';
 import HomeAddresses from './pages/official/HomeAddresses.jsx';
@@ -183,14 +182,6 @@ function AppContentRoutes() {
             element={
               <AnimatedPageWrapper>
                 <EmergencyGrid />
-              </AnimatedPageWrapper>
-            }
-          />
-          <Route
-            path="/active-tracker"
-            element={
-              <AnimatedPageWrapper>
-                <ActiveTracker />
               </AnimatedPageWrapper>
             }
           />
