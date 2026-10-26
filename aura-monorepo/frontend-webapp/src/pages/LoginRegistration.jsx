@@ -69,20 +69,6 @@ export default function LoginRegistration() {
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
-  // Quick helper to fill a valid test ID for hackathon judges & testers
-  const handleAutoFillDemoId = () => {
-    setFormData({
-      fullName: 'Naledi Dlamini',
-      idNumber: '9201015000081', // Validated SA ID format & Luhn checksum
-      phoneNumber: '0821234567',
-    });
-    setTouched({
-      fullName: true,
-      idNumber: true,
-      phoneNumber: true,
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
@@ -156,19 +142,10 @@ export default function LoginRegistration() {
         </div>}
         {/* South African ID Number (Luhn Checksum Validated) */}
         {!isLogin && <div>
-          <div className="flex justify-between items-center mb-1">
+          <div className="mb-1">
             <label className="text-xs font-medium text-zinc-300">
               South African ID Number
             </label>
-            {import.meta.env.DEV && (
-              <button
-                type="button"
-                onClick={handleAutoFillDemoId}
-                className="text-[10px] text-rose-400 hover:text-rose-300 font-mono cursor-pointer"
-              >
-                Fill Demo ID
-              </button>
-            )}
           </div>
           <div className="relative">
             <CreditCard className="w-4 h-4 absolute left-3.5 top-3.5 text-zinc-500" />

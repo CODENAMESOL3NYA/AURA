@@ -163,10 +163,10 @@ export default function OfficialHome() {
             </div>
             <button
               type="button"
-              onClick={() => navigate('/active-tracker')}
+              onClick={() => navigate('/')}
               className="px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold tracking-tight transition-colors cursor-pointer shrink-0"
             >
-              Track Unit
+              View Beacon
             </button>
           </motion.div>
         )}
