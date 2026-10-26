@@ -9,10 +9,21 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
+/**
+ * Task 1: The Performance-Driven Splash Screen
+ * - Pure OLED pitch-black background (bg-black)
+ * - Minimal "Aura" brand text/logo in the center (crisp white, tracking-tight)
+ * - Zero marketing copy, ads, or dense text
+ * - Simulated background initialization check in useEffect
+ * - Display timer bounded at 2.4s (~2.5s target)
+ * - Glowing crimson pulse and sleek hairline loading indicator
+ * - Framer Motion smooth exit fade
+ */
 export function SplashScreen({ onComplete }) {
   const [initStage, setInitStage] = useState('Booting Aura Security Kernel...');
 
   useEffect(() => {
+    // Simulated background telemetry initialization sequence
     const stage1 = setTimeout(() => {
       setInitStage('Validating cryptographic enclave...');
     }, 600);
@@ -65,6 +76,7 @@ export function SplashScreen({ onComplete }) {
           />
         </motion.div>
 
+        {/* Minimalist Micro Boot Telemetry */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -75,6 +87,7 @@ export function SplashScreen({ onComplete }) {
         </motion.p>
       </div>
 
+      {/* Sleek Hairline Loading Indicator at Bottom */}
       <div className="w-full max-w-xs px-6 pb-12 flex flex-col items-center space-y-2 relative z-10">
         <div className="w-full h-[2px] bg-zinc-900 rounded-full overflow-hidden relative">
           <motion.div
@@ -89,6 +102,17 @@ export function SplashScreen({ onComplete }) {
   );
 }
 
+/**
+ * Task 2 & Task 3: The Minimalist Onboarding Carousel
+ * - Displayed on first launch (hasSeenOnboarding === false)
+ * - Pure OLED black background (bg-black)
+ * - Fluid spring physics for horizontal slides: transition={{ type: "spring", stiffness: 300, damping: 30 }}
+ * - Headers: text-2xl font-bold tracking-tight text-white
+ * - Subtext: text-zinc-400 leading-relaxed
+ * - Micro-interactions: whileTap={{ scale: 0.95 }} on "Next" and "Get Started"
+ * - Pagination: active dot w-6 h-2 bg-rose-500 rounded-full transition-all duration-300, inactive w-2 h-2 bg-zinc-800 rounded-full
+ * - Sets localStorage.setItem('hasSeenOnboarding', 'true') on completion
+ */
 export function OnboardingCarousel({ onComplete }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
@@ -100,7 +124,7 @@ export function OnboardingCarousel({ onComplete }) {
       iconColor: 'text-rose-500',
       glowColor: 'from-rose-500/20 to-rose-950/30 border-rose-500/30 text-rose-500 shadow-[0_0_50px_-15px_rgba(244,63,94,0.4)]',
       title: 'Rapid SOS Dispatch',
-      subtitle: 'One-touch emergency beacon broadcasts encrypted coordinates to the nearest SAPS sector, CPF patrol, and armed private responders in under 3 seconds.',
+      subtitle: 'One-touch incident requests use your device location when permission is granted. This prototype is not connected to live responders.',
       features: ['Sub-3s Dispatch Time', 'Real-time GPS Tracking', 'SAPS Flying Squad Link']
     },
     {
@@ -113,13 +137,13 @@ export function OnboardingCarousel({ onComplete }) {
       features: ['Instant Camouflage', 'Shake & Double-Tap Trigger', 'Zero Data Footprint']
     },
     {
-      badge: '03 // VERIFIED CITIZEN',
+      badge: '03 // ID FORMAT CHECK',
       icon: ShieldCheck,
       iconColor: 'text-emerald-400',
       glowColor: 'from-emerald-500/20 to-emerald-950/30 border-emerald-500/30 text-emerald-400 shadow-[0_0_50px_-15px_rgba(16,185,129,0.35)]',
       title: 'Citizen Verification',
-      subtitle: 'Verified through algorithmic South African National ID validation. Your identity and medical notes are protected on-device and shared exclusively during distress.',
-      features: ['Algorithmic Luhn Validation', 'Encrypted Local Storage', 'Verified Citizen Badge']
+      subtitle: 'The South African ID check validates format only and does not prove identity. Notes are not guaranteed to be protected or shared only during distress.',
+      features: ['Algorithmic Luhn Validation', 'Local browser storage', 'Phone verification required']
     }
   ];
 
@@ -155,6 +179,7 @@ export function OnboardingCarousel({ onComplete }) {
 
   return (
     <div className="w-full h-full flex-1 flex flex-col justify-between text-white font-sans selection:bg-rose-500/30 selection:text-white bg-black overflow-hidden p-6 pt-10 pb-8 select-none">
+      {/* Top Bar with System Tag & Skip Button */}
       <div className="flex items-center justify-between w-full relative z-20">
         <div className="flex items-center space-x-2">
           <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
@@ -204,6 +229,7 @@ export function OnboardingCarousel({ onComplete }) {
               </p>
             </div>
 
+            {/* Minimalist Feature Chips */}
             <div className="flex flex-wrap justify-center gap-1.5 pt-1">
               {slide.features.map((feat, idx) => (
                 <span
@@ -218,7 +244,9 @@ export function OnboardingCarousel({ onComplete }) {
         </AnimatePresence>
       </div>
 
+      {/* Bottom Footer Controls: Exact Task 3 Pagination Dots & Micro-interaction Buttons */}
       <div className="w-full max-w-sm mx-auto space-y-6 relative z-20">
+        {/* Pagination Dots (Task 1 specification) */}
         <div className="flex items-center justify-center gap-2">
           {slides.map((_, index) => (
             index === currentSlide ? (
@@ -239,6 +267,7 @@ export function OnboardingCarousel({ onComplete }) {
           ))}
         </div>
 
+        {/* Action Buttons Row */}
         <div className="flex items-center space-x-3 w-full">
           {currentSlide > 0 ? (
             <motion.button
@@ -276,6 +305,10 @@ export function OnboardingCarousel({ onComplete }) {
   );
 }
 
+/**
+ * Task 3: Complete Splash & Onboarding State Machine Controller
+ * Manages the transitions with AnimatePresence mode="wait" and zero-flash synchronous state
+ */
 export default function SplashAndOnboardingFlow({ onFinished }) {
   const [isBooting, setIsBooting] = useState(true);
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(() => {
