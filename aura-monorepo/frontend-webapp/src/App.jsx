@@ -1,25 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate,Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AuthAndSafetyProvider, useAuthAndSafety } from './context/AuthAndSafetyContext.jsx';
 import { SafetyProvider } from './context/SafetyContext.jsx';
 import OfficialLayout from './components/OfficialLayout.jsx';
-// Sprint 1: Enable stealth routing once the stealth screens are implemented.
-// import StealthLayout from './components/StealthLayout.jsx';
+import StealthLayout from './components/StealthLayout.jsx';
 import SafetyDrawer from './components/SafetyDrawer.jsx';
-// Sprint 1: Re-enable each screen import when its page has a default export.
-// import HomeDashboard from './pages/official/HomeDashboard.jsx';
-// import EmergencyGrid from './pages/official/EmergencyGrid.jsx';
-// import ActiveTracker from './pages/official/ActiveTracker.jsx';
-// import OfficialHome from './pages/official/OfficialHome.jsx';
+import HomeDashboard from './pages/official/HomeDashboard.jsx';
+import EmergencyGrid from './pages/official/EmergencyGrid.jsx';
+import ActiveTracker from './pages/official/ActiveTracker.jsx';
+import OfficialHome from './pages/official/OfficialHome.jsx';
 import Profile from './pages/official/Profile.jsx';
-// import HomeAddresses from './pages/official/HomeAddresses.jsx';
-// import EmergencyContacts from './pages/official/EmergencyContacts.jsx';
-// import SafetySettings from './pages/official/SafetySettings.jsx';
-// import StealthDashboard from './pages/stealth/StealthDashboard.jsx';
-// import PlannerDashboard from './pages/stealth/PlannerDashboard.jsx';
-// import DiscreetJournal from './pages/stealth/DiscreetJournal.jsx';
+import HomeAddresses from './pages/official/HomeAddresses.jsx';
+import EmergencyContacts from './pages/official/EmergencyContacts.jsx';
+import SafetySettings from './pages/official/SafetySettings.jsx';
+import StealthDashboard from './pages/stealth/StealthDashboard.jsx';
+import PlannerDashboard from './pages/stealth/PlannerDashboard.jsx';
+import DiscreetJournal from './pages/stealth/DiscreetJournal.jsx';
 import LoginRegistration from './pages/LoginRegistration.jsx';
+import ResponderDashboard from './pages/responder/ResponderDashboard.jsx';
 import { SplashScreen, OnboardingCarousel } from './pages/SplashAndOnboarding.jsx';
 
 // Snappy cross-fade transition wrapper
@@ -91,13 +90,20 @@ function AppContentRoutes() {
               </AnimatedPageWrapper>
             }
           />
+          <Route
+            path="/responder"
+            element={
+              <AnimatedPageWrapper>
+                <ResponderDashboard />
+              </AnimatedPageWrapper>
+            }
+          />
           <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>
       </AnimatePresence>
     );
   }
 
-  /* Sprint 1: Temporarily keep unavailable stealth routes disabled.
   // 2. Authenticated in Stealth Mode: Wrap in <StealthLayout>
   if (isStealthMode) {
     return (
@@ -150,19 +156,17 @@ function AppContentRoutes() {
       </AnimatePresence>
     );
   }
-  */
 
   // 3. Authenticated in Official Mode: Wrap in <OfficialLayout>
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route element={<OfficialLayout />}>
-          {/* Sprint 1 dashboard is still empty; use the implemented Profile page temporarily. */}
           <Route
             path="/"
             element={
               <AnimatedPageWrapper>
-                <Profile />
+                <HomeDashboard />
               </AnimatedPageWrapper>
             }
           />
@@ -170,11 +174,10 @@ function AppContentRoutes() {
             path="/beacon"
             element={
               <AnimatedPageWrapper>
-                <Profile />
+                <HomeDashboard />
               </AnimatedPageWrapper>
             }
           />
-          {/* Sprint 1: Re-enable these routes after their page components are implemented.
           <Route
             path="/emergency-grid"
             element={
@@ -199,7 +202,6 @@ function AppContentRoutes() {
               </AnimatedPageWrapper>
             }
           />
-          */}
           <Route
             path="/profile"
             element={
@@ -208,7 +210,6 @@ function AppContentRoutes() {
               </AnimatedPageWrapper>
             }
           />
-          {/* Sprint 3: Re-enable profile sub-pages after implementation.
           <Route
             path="/profile/addresses"
             element={
@@ -225,7 +226,6 @@ function AppContentRoutes() {
               </AnimatedPageWrapper>
             }
           />
-          */}
           <Route
             path="/profile/settings"
             element={
@@ -239,6 +239,14 @@ function AppContentRoutes() {
             element={
               <AnimatedPageWrapper>
                 <OnboardingCarousel onComplete={() => navigate('/')} />
+              </AnimatedPageWrapper>
+            }
+          />
+          <Route
+            path="/responder"
+            element={
+              <AnimatedPageWrapper>
+                <ResponderDashboard />
               </AnimatedPageWrapper>
             }
           />
@@ -266,7 +274,13 @@ export default function App() {
                 <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
                 <span className="text-zinc-300 font-bold">AURA // TACTICAL DISPATCH</span>
               </div>
-              <span className="text-zinc-500">MOBILE VIEWPORT</span>
+              <Link
+                to="/responder"
+                className="text-rose-400 hover:text-rose-300 font-bold bg-rose-950/80 border border-rose-800/80 px-2 py-0.5 rounded-md text-[10px] transition cursor-pointer flex items-center space-x-1"
+              >
+                <span>RESPONDER CONSOLE</span>
+                <span>&rarr;</span>
+              </Link>
             </header>
 
             {/* Centered Mobile Device Frame with Smooth Theme Inheritance */}

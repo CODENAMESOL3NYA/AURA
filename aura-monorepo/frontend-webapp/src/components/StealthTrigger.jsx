@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, Tag, X, Check } from 'lucide-react';
 import { useAuthAndSafety } from '../context/AuthAndSafetyContext';
-import { useSafety } from '../context/SafetyContext';
+import { startTask } from '../services/dispatchService.js';
 
 export default function StealthTrigger({ isOpen, onClose, defaultTitle = '' }) {
-  const { triggerEmergency } = useAuthAndSafety();
-  const { triggerSos } = useSafety();
+  const { setActiveEmergency } = useAuthAndSafety();
 
   const [taskTitle, setTaskTitle] = useState(defaultTitle || 'Follow-up Consultation');
   const [selectedCategory, setSelectedCategory] = useState('urgent');
@@ -14,63 +13,23 @@ export default function StealthTrigger({ isOpen, onClose, defaultTitle = '' }) {
   if (!isOpen) return null;
 
   const categories = [
-    {
-      id: 'personal',
-      label: 'Personal Matter',
-      desc: 'Standard priority private task',
-      stealthPayload: {
-        type: 'GBV Silent Alert - Domestic Dispute',
-        severity: 'Priority 1 - Crisis Unit Discreet',
-        discreet: true,
-      },
-    },
-    {
-      id: 'urgent',
-      label: 'Urgent Consultation',
-      desc: 'Immediate scheduling required',
-      stealthPayload: {
-        type: 'GBV Code Red - Imminent Danger / Extraction',
-        severity: 'Priority 1 - Tactical Silent Patrol',
-        discreet: true,
-      },
-    },
-    {
-      id: 'routine',
-      label: 'Routine Follow-up',
-      desc: 'Scheduled check-in at home',
-      stealthPayload: {
-        type: 'GBV Welfare Patrol - Undercover Drive-by',
-        severity: 'Priority 2 - Silent Verification',
-        discreet: true,
-      },
-    },
-    {
-      id: 'wellness',
-      label: 'Wellness Review',
-      desc: 'Health and recovery check',
-      stealthPayload: {
-        type: 'GBV Medical Trauma Support',
-        severity: 'Priority 1 - Trauma Paramedic',
-        discreet: true,
-      },
-    },
+    { id: 'personal', label: 'Personal Matter', desc: 'Standard priority private task', kind: 1 },
+    { id: 'urgent', label: 'Urgent Consultation', desc: 'Immediate scheduling required', kind: 2 },
+    { id: 'routine', label: 'Routine Follow-up', desc: 'Scheduled check-in at home', kind: 3 },
+    { id: 'wellness', label: 'Wellness Review', desc: 'Health and recovery check', kind: 4 },
   ];
 
-  const handleSaveTask = (e) => {
+  const handleSaveTask = async (e) => {
     e.preventDefault();
-
     const selectedOption = categories.find((c) => c.id === selectedCategory) || categories[1];
-
-    // Trigger active emergency silently in context
-    triggerEmergency({
-      ...selectedOption.stealthPayload,
-      note: taskTitle,
-      discreetMode: true,
-      dispatchedResponders: ['e-SAPS Silent Flying Squad', 'Thuthuzela Crisis Unit'],
-    });
-
-    triggerSos();
-    onClose();
+    const priority = reminderTime === 'Immediate' ? 1 : reminderTime === '15m' ? 2 : 3;
+    try {
+      const task = await startTask({ title: taskTitle, kind: selectedOption.kind, priority, tags: [] });
+      setActiveEmergency({ id: task.id, status: 'active', etaMinutes: task.eta ?? null, stealth: true });
+      onClose();
+    } catch (error) {
+      window.alert(error?.message || 'Unable to save task. Check your location and connection, then try again.');
+    }
   };
 
   return (

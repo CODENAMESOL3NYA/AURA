@@ -1,32 +1,53 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
+  Shield, 
+  CheckCircle2, 
+  AlertCircle, 
+  Eye, 
+  EyeOff, 
   User, 
   Phone, 
+  CreditCard, 
+  Lock, 
   ArrowRight,
+  ShieldCheck,
+  Calendar,
+  Sparkles
 } from 'lucide-react';
+import { validateSouthAfricanId } from '../utils/saIdValidator.js';
 import { useAuthAndSafety } from '../context/AuthAndSafetyContext';
-
-// Sprint 3: Re-enable SA ID verification after adding its validator.
-// import { validateSouthAfricanId } from '../utils/saIdValidator.js';
+import apiClient from '../services/apiClient.js';
+import { setSecret } from '../services/storage.js';
 
 export default function LoginRegistration() {
   const navigate = useNavigate();
-  const { setIsAuthenticated, setUser } = useAuthAndSafety();
+  const { setIsAuthenticated, setIsStealthMode, setUser } = useAuthAndSafety();
 
   const [formData, setFormData] = useState({
     fullName: '',
+    idNumber: '',
     phoneNumber: '',
   });
 
-  /* Sprint 3: Re-enable SA ID validation with the completed validator.
+  const [showStealthModal, setShowStealthModal] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
+  const [awaitingOtp, setAwaitingOtp] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [touched, setTouched] = useState({
+    fullName: false,
+    idNumber: false,
+    phoneNumber: false,
+  });
+
+  // Real-time validation of South African ID number (Luhn Checksum + DOB check)
   const idValidation = useMemo(() => {
     if (!formData.idNumber) {
       return { isValid: false, error: null, details: null };
     }
     return validateSouthAfricanId(formData.idNumber);
   }, [formData.idNumber]);
-  */
 
   // Phone number basic validation (SA format: 10 digits starting with 0, or with +27)
   const isPhoneValid = useMemo(() => {
@@ -36,42 +57,65 @@ export default function LoginRegistration() {
 
   const isNameValid = formData.fullName.trim().length >= 3;
 
-  // ID verification is deferred; Sprint 1 requires a valid name and phone number.
-  const isFormValid = isNameValid && isPhoneValid;
+  // Sign up button strictly disabled until ID passes algorithmic Luhn validation
+  const isFormValid = isPhoneValid && (isLogin || (isNameValid && idValidation.isValid));
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  /* Sprint 3: Restore the SA ID demo helper alongside ID verification.
+  const handleBlur = (field) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
+  // Quick helper to fill a valid test ID for hackathon judges & testers
   const handleAutoFillDemoId = () => {
     setFormData({
       fullName: 'Naledi Dlamini',
       idNumber: '9201015000081', // Validated SA ID format & Luhn checksum
       phoneNumber: '0821234567',
     });
+    setTouched({
+      fullName: true,
+      idNumber: true,
+      phoneNumber: true,
+    });
   };
-  */
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isFormValid) return;
-    handleRegistrationComplete();
+    setErrorMessage('');
+    if (!awaitingOtp) {
+      if (!isFormValid) return;
+      try {
+        if (isLogin) await apiClient.loginRequestOtp({ phoneNumber: formData.phoneNumber });
+        else await apiClient.register({ ...formData, idNumber: formData.idNumber.trim(), fullName: formData.fullName.trim() });
+        setAwaitingOtp(true);
+      } catch (error) {
+        setErrorMessage(error?.message || 'Registration is unavailable. Please try again later.');
+      }
+      return;
+    }
+    if (!/^\d{6}$/.test(otpCode)) return;
+    try {
+      const result = isLogin
+        ? await apiClient.loginVerifyOtp({ phoneNumber: formData.phoneNumber, code: otpCode })
+        : await apiClient.verifyOtp({ phoneNumber: formData.phoneNumber, code: otpCode });
+      await setSecret('aura_auth_token', result.token);
+      setUser({ ...result.user, phoneNumber: formData.phoneNumber, isVerified: true, citizenStatus: 'Phone verified' });
+      setIsAuthenticated(true);
+      setShowStealthModal(true);
+    } catch (error) {
+      setErrorMessage(error?.message || 'The code could not be verified.');
+    }
   };
 
-  const handleRegistrationComplete = () => {
-    const registeredUser = {
-      id: `usr_${Date.now()}`,
-      fullName: formData.fullName.trim(),
-      phoneNumber: formData.phoneNumber.trim(),
-      isVerified: false,
-    };
-    if (typeof setUser === 'function') {
-      setUser(registeredUser);
-    }
-    setIsAuthenticated(true);
-    navigate('/');
+  const handleSelectDisguise = (enableStealth) => {
+    setIsStealthMode(enableStealth);
+    setShowStealthModal(false);
+    if (enableStealth) navigate('/calendar');
+    else navigate('/');
   };
 
   return (
@@ -87,8 +131,12 @@ export default function LoginRegistration() {
 
       {/* Main Registration Form */}
       <form onSubmit={handleSubmit} className="space-y-3.5 my-auto max-w-sm w-full mx-auto">
+        <div className="flex rounded-xl border border-zinc-800 p-1 gap-1">
+          <button type="button" onClick={() => { setIsLogin(false); setAwaitingOtp(false); setOtpCode(''); setErrorMessage(''); }} className={`flex-1 rounded-lg py-2 text-xs ${!isLogin ? 'bg-rose-600 text-white' : 'text-zinc-400'}`}>Create account</button>
+          <button type="button" onClick={() => { setIsLogin(true); setAwaitingOtp(false); setOtpCode(''); setErrorMessage(''); }} className={`flex-1 rounded-lg py-2 text-xs ${isLogin ? 'bg-rose-600 text-white' : 'text-zinc-400'}`}>Sign in</button>
+        </div>
         {/* Full Name */}
-        <div>
+        {!isLogin && <div>
           <label className="block text-xs font-medium text-zinc-300 mb-1">
             Full Name
           </label>
@@ -99,26 +147,28 @@ export default function LoginRegistration() {
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
+              onBlur={() => handleBlur('fullName')}
               placeholder="e.g. Naledi Dlamini"
               className="w-full pl-10 pr-3 py-3 bg-zinc-900/90 border border-zinc-800 rounded-2xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500 transition"
               required
             />
           </div>
-        </div>
-
-        {/* Sprint 3: South African ID field and validation are deferred.
-        <div>
+        </div>}
+        {/* South African ID Number (Luhn Checksum Validated) */}
+        {!isLogin && <div>
           <div className="flex justify-between items-center mb-1">
             <label className="text-xs font-medium text-zinc-300">
               South African ID Number
             </label>
-            <button
-              type="button"
-              onClick={handleAutoFillDemoId}
-              className="text-[10px] text-rose-400 hover:text-rose-300 font-mono cursor-pointer"
-            >
-              Fill Demo ID
-            </button>
+            {import.meta.env.DEV && (
+              <button
+                type="button"
+                onClick={handleAutoFillDemoId}
+                className="text-[10px] text-rose-400 hover:text-rose-300 font-mono cursor-pointer"
+              >
+                Fill Demo ID
+              </button>
+            )}
           </div>
           <div className="relative">
             <CreditCard className="w-4 h-4 absolute left-3.5 top-3.5 text-zinc-500" />
@@ -150,7 +200,7 @@ export default function LoginRegistration() {
             )}
           </div>
 
-          Validation Feedback & Extracted DOB
+          {/* Validation Feedback & Extracted DOB */}
           {touched.idNumber && formData.idNumber && (
             <div className="mt-1">
               {idValidation.isValid ? (
@@ -164,9 +214,7 @@ export default function LoginRegistration() {
               )}
             </div>
           )}
-        </div>
-        */}
-
+        </div>}
         {/* Phone Number */}
         <div>
           <label className="block text-xs font-medium text-zinc-300 mb-1">
@@ -179,6 +227,7 @@ export default function LoginRegistration() {
               name="phoneNumber"
               value={formData.phoneNumber}
               onChange={handleChange}
+              onBlur={() => handleBlur('phoneNumber')}
               placeholder="e.g. 082 123 4567"
               className="w-full pl-10 pr-3 py-3 bg-zinc-900/90 border border-zinc-800 rounded-2xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500 transition"
               required
@@ -186,27 +235,34 @@ export default function LoginRegistration() {
           </div>
         </div>
 
+        {awaitingOtp && (
+          <div>
+            <label className="block text-xs font-medium text-zinc-300 mb-1">Six-digit SMS code</label>
+            <input type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="123456" className="w-full px-3 py-3 bg-zinc-900/90 border border-zinc-800 rounded-2xl text-xs font-mono text-white focus:outline-none focus:border-rose-500 transition" />
+          </div>
+        )}
+        {errorMessage && <p role="alert" className="text-[10px] text-rose-400 text-center">{errorMessage}</p>}
+
         {/* Submit Verification Button */}
         <button
           type="submit"
-          disabled={!isFormValid}
+          disabled={awaitingOtp ? !/^\d{6}$/.test(otpCode) : !isFormValid}
           className={`w-full py-3.5 px-4 rounded-2xl font-bold text-xs tracking-wider flex items-center justify-center space-x-2 transition cursor-pointer min-h-[50px] shadow-lg ${
             isFormValid
               ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30'
               : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-800'
           }`}
         >
-          <span>CONTINUE</span>
+          <span>{awaitingOtp ? 'CONFIRM CODE' : isLogin ? 'REQUEST SIGN-IN CODE' : 'REQUEST SMS CODE'}</span>
           <ArrowRight className="w-4 h-4" />
         </button>
 
         <p className="text-[10px] text-zinc-500 text-center font-mono">
-          ID verification is deferred to a later sprint.
+          {isLogin ? 'If this number belongs to a verified account, a code will be sent.' : 'Strict verification required to prevent false emergency hoaxes.'}
         </p>
       </form>
 
-      {/* Sprint 1: Restore the stealth choice modal when stealth screens are available.
-      Discretion / Stealth Choice Modal
+      {/* Discretion / Stealth Choice Modal */}
       {showStealthModal && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <div className="max-w-xs w-full bg-[#121214] border border-zinc-800 rounded-3xl p-5 shadow-2xl text-white space-y-4 font-sans text-center">
@@ -241,7 +297,6 @@ export default function LoginRegistration() {
           </div>
         </div>
       )}
-      */}
 
       {/* Footer Info */}
       <div className="text-center text-[10px] text-zinc-500 font-mono py-1">
