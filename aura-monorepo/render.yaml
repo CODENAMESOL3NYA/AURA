@@ -12,7 +12,7 @@ services:
     rootDir: aura-monorepo/backend-api
     buildCommand: npm ci
     startCommand: npm start
-    healthCheckPath: /api/v1/health
+    healthCheckPath: /api/v1/live
     autoDeploy: true
     envVars:
       - key: NODE_ENV

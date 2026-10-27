@@ -99,13 +99,15 @@ const view = (r) => ({
   etaMinutes: r.eta_minutes ?? null,
   createdAt: r.created_at,
 });
+app.get("/api/v1/live", (req, res) => res.json({ status: "ok" }));
 app.get(
   "/api/v1/health",
   asyncHandler(async (req, res) => {
     try {
       await db.query("SELECT 1");
       res.json({ status: "ok", db: "up", time: new Date().toISOString() });
-    } catch {
+    } catch (e) {
+      console.error("[HEALTH] db error:", e.code, e.message);
       res
         .status(503)
         .json({
